@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class ReaderUtil {
 
-    public static HashMap<String, Integer> map = new HashMap<>();
+//    public static HashMap<String, Integer> map = new HashMap<>();
 
 
     //降序排序
@@ -23,7 +23,7 @@ public class ReaderUtil {
         return result;
     }
 
-    public static HashMap<String, Integer>  buildMap(String line){
+    public static HashMap<String, Integer>  buildMap(String line,HashMap<String,Integer> map){
         if(line.contains("GET")){
             String[] splits = line.split("GET");
             if(splits[1].contains("HTTP/1.1")){

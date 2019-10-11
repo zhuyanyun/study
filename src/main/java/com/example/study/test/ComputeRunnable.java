@@ -7,7 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ComputeRunnable implements Runnable {
 
-    public static ConcurrentHashMap concurrentHashMap = new ConcurrentHashMap<String,Integer>(200);
+//    public static ConcurrentHashMap concurrentHashMap = new ConcurrentHashMap<String,Integer>(200);
+    public static HashMap map = new HashMap<String,Integer>();
 
     private List<String> list;
 
@@ -19,7 +20,7 @@ public class ComputeRunnable implements Runnable {
     @Override
     public void run() {
         for(String s : list){
-            HashMap<String, Integer> stringIntegerHashMap = ReaderUtil.buildMap(s);
+            map = ReaderUtil.buildMap(s,map);
         }
     }
 }
