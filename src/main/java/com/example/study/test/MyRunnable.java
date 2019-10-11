@@ -1,5 +1,7 @@
 package com.example.study.test;
 
+import com.fasterxml.jackson.databind.util.JSONPObject;
+
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 
@@ -12,11 +14,11 @@ public class MyRunnable implements Runnable {
         BlockingQueue<String> queue = ChannelFileReader.queue;
         TaskPool taskPool = new TaskPool();
         for(;;){
+            ArrayList<String> list = new ArrayList<>();
             if(!queue.isEmpty()){
                 int i = 1;
                 String poll = queue.poll();
                 String[] split = poll.split("\n");
-                ArrayList<String> list = new ArrayList<>();
                 for(int j=0;j<split.length;j++){
                     if(split[i].contains("root")){
                         list.add(split[j]);
@@ -24,17 +26,15 @@ public class MyRunnable implements Runnable {
                         if(sb == null){
                             sb.append(split[j]);
                         }else {
-
+                            sb.append(split[i]);
+                            list.add(sb.toString());
+                            sb = null;
                         }
                     }
                 }
-
-                taskPool.execute(new ComputeRunnable(list));
-
                 System.out.println(split[0]);
-//                taskPool.execute(new Task("zzz" + i,));
-                i++;
             }
+            taskPool.execute(new ComputeRunnable(list));
         }
     }
 }
