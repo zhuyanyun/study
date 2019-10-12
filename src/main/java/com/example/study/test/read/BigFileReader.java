@@ -198,6 +198,7 @@ public class BigFileReader {
                             //先分行，处理字符串
                             lineBytes = Arrays.copyOfRange(readBuff,j,j+i);
                             int k = 0;
+                            int x = 0;
                             for (int m=0;m<lineBytes.length;m++){
                                 byte blank = lineBytes[m];
                                 if(blank == '\t' && k != 3){
@@ -205,14 +206,26 @@ public class BigFileReader {
                                     String s2=new String(ss);
                                     System.out.println(s2);
                                     k++;
+                                    x = m;
                                 }else if (blank == '\t' && k == 3){
-                                    byte[] ss = Arrays.copyOfRange(lineBytes,0,m);
+                                    byte[] ss = Arrays.copyOfRange(lineBytes,x,m);
                                     String s2=new String(ss);
                                     System.out.println(s2);
+                                    for(int y=0; y< ss.length; y++) {
+                                        System.out.println(ss[y]);
+                                        System.out.println(ss[y] == 47);
+                                        if(ss[y] == '/'){
+                                            byte[] urlByte = Arrays.copyOfRange(ss, y, ss.length);
+                                            String url = new String(urlByte);
+                                        }
+                                    }
                                 }
+//                                    String s2=new String(ss);
+//                                    System.out.println(s2);
                             }
+                        }
 
-                            String s1=new String(lineBytes);
+//                            String s1=new String(lineBytes);
 //                            System.out.println(s1);
 
 //                            concurrentHashMap.put(readBuff[j]);
@@ -220,14 +233,14 @@ public class BigFileReader {
 //                            handle(bos.toByteArray());
 //                            bos.reset();
                             j = i;
-                        }else{
-//                            bos.write(tmp);
-                        }
+//                        }else{
+////                            bos.write(tmp);
+//                        }
                     }
                 }
-                if(bos.size()>0){
-                    handle(bos.toByteArray());
-                }
+//                if(bos.size()>0){
+//                    handle(bos.toByteArray());
+//                }
                 cyclicBarrier.await();//测试性能用
             }catch (Exception e) {
                 e.printStackTrace();
