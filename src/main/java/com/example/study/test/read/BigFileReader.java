@@ -173,6 +173,7 @@ public class BigFileReader {
         @Override
         public void run() {
             try {
+                //放在外面大文件可能造成oom
                 MappedByteBuffer mapBuffer = rAccessFile.getChannel().map(MapMode.READ_ONLY,start, this.sliceSize);
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 for(int offset=0;offset<sliceSize;offset+=bufferSize){
@@ -186,10 +187,10 @@ public class BigFileReader {
                     for(int i=0;i<readLength;i++){
                         byte tmp = readBuff[i];
                         if(tmp=='\n' || tmp=='\r'){
-                            handle(bos.toByteArray());
-                            bos.reset();
+//                            handle(bos.toByteArray());
+//                            bos.reset();
                         }else{
-                            bos.write(tmp);
+//                            bos.write(tmp);
                         }
                     }
                 }

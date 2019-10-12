@@ -9,7 +9,7 @@ public class Main {
     public static void main(String[] args) {
         Long startTime = System.currentTimeMillis();
 
-        BigFileReader.Builder builder = new BigFileReader.Builder("/Users/mac/Desktop/技术大赛/4G.log",new IHandle() {
+        BigFileReader.Builder builder = new BigFileReader.Builder("/Users/mac/Desktop/技术大赛/access.log",new IHandle() {
 
             @Override
             public void handle(String line) {
@@ -19,7 +19,7 @@ public class Main {
         });
         builder.withTreahdSize(10)
                 .withCharset("utf-8")
-                .withBufferSize(1024*1024);
+                .withBufferSize(1024*1024*100);
         BigFileReader bigFileReader = builder.build();
         bigFileReader.start();
 

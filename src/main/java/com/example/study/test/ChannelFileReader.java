@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ChannelFileReader {
 
@@ -25,7 +26,7 @@ public class ChannelFileReader {
     private byte[] array;
 
 
-    private HashMap<String, Integer> map = new HashMap<>();
+    private volatile Map map = new ConcurrentHashMap<String, Integer>();
     public static BlockingQueue<String> queue = new ArrayBlockingQueue<String>(4);
 
     public ChannelFileReader(String fileName, int arraySize) throws IOException {
@@ -36,6 +37,8 @@ public class ChannelFileReader {
     }
 
     public int read() throws IOException {
+        new ConcurrentHashMap<String, Integer>();
+
         FileChannel fileChannel = fileIn.getChannel();
         int bytes = fileChannel.read(byteBuf);// 读取到ByteBuffer中
         if (bytes != -1) {
@@ -134,7 +137,7 @@ public class ChannelFileReader {
         return fileLength;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         TaskPool taskPool = new TaskPool();
         ChannelFileReader reader = new ChannelFileReader("/Users/mac/Desktop/技术大赛/4G.log", 65536);
         Long startTime = System.currentTimeMillis();
@@ -144,10 +147,12 @@ public class ChannelFileReader {
 
         }
 
-        new Thread(new MyRunnable()).start();
+        HashMap<String, Integer> map = new HashMap<>();
+        Thread thread = new Thread(new MyRunnable(map));
+        thread.join();
 
         reader.close();
-        sortByComparator(reader.map);
+        sortByComparator(map);
 
 
 

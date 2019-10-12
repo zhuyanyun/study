@@ -3,9 +3,21 @@ package com.example.study.test;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MyRunnable implements Runnable {
+
+    private static volatile HashMap map;
+
+    private ExecutorService executor = Executors.newFixedThreadPool(8);
+
+
+    public MyRunnable(HashMap map){
+        this.map = map;
+    }
 
     StringBuilder sb = null;
     @Override
@@ -15,8 +27,8 @@ public class MyRunnable implements Runnable {
         TaskPool taskPool = new TaskPool();
         for(;;){
             ArrayList<String> list = new ArrayList<>();
+            int i = 1;
             if(!queue.isEmpty()){
-                int i = 1;
                 String poll = queue.poll();
                 String[] split = poll.split("\n");
                 for(int j=0;j<split.length;j++){
@@ -34,7 +46,19 @@ public class MyRunnable implements Runnable {
                 }
                 System.out.println(split[0]);
             }
-            taskPool.execute(new ComputeRunnable(list));
+
+
+            //使用线程池不能统计结果
+            executor.submit(new ComputeRunnable(list,"kk" + i));
+
+            i++;
+
+
+//            Thread thread = new Thread(String.valueOf(new ComputeRunnable(list, "线程" + i)));
+//            thread.start();
+
+            //计划改为fork join框架
+
         }
     }
 }

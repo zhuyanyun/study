@@ -1,5 +1,6 @@
 package com.example.study.test;
 
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 public class Task implements Runnable{
@@ -9,8 +10,11 @@ public class Task implements Runnable{
     //处理后的整行数据；
     private String str;
 
-    public Task(String name){
+    private Map map;
+
+    public Task(String name,Map map){
         this.name = name;
+        this.map = map;
     }
 
     public void run(){
@@ -19,7 +23,7 @@ public class Task implements Runnable{
             System.out.println("我的名字是：" + this.name);
             BlockingQueue<String> queue = ChannelFileReader.queue;
             String poll = queue.poll();
-            ReaderUtil.buildMap(poll);
+//            ReaderUtil.buildMap(poll,map);
         }catch (Exception e){
             e.printStackTrace();
             System.out.println(e.getMessage());
