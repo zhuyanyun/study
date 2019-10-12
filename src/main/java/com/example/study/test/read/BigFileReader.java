@@ -8,8 +8,11 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel.MapMode;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,6 +69,7 @@ public class BigFileReader {
         }
     }
 
+    //移动指针到行尾
     private void calculateStartEnd(long start,long size) throws IOException{
         if(start>fileLength-1){
             return;
@@ -161,7 +165,7 @@ public class BigFileReader {
         private long sliceSize;
         private byte[] readBuff;
         /**
-         * @param start 	read position (include)
+         * @param  	read position (include)
          * @param end 	the position read to(include)
          */
         public SliceReaderTask(StartEndPair pair) {
@@ -174,9 +178,10 @@ public class BigFileReader {
         public void run() {
             try {
                 //放在外面大文件可能造成oom
-                MappedByteBuffer mapBuffer = rAccessFile.getChannel().map(MapMode.READ_ONLY,start, this.sliceSize);
+//                MappedByteBuffer mapBuffer = rAccessFile.getChannel().map(MapMode.READ_ONLY,start, this.sliceSize);
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 for(int offset=0;offset<sliceSize;offset+=bufferSize){
+                    MappedByteBuffer mapBuffer = rAccessFile.getChannel().map(MapMode.READ_ONLY,start, this.sliceSize);
                     int readLength;
                     if(offset+bufferSize<=sliceSize){
                         readLength = bufferSize;
@@ -184,11 +189,37 @@ public class BigFileReader {
                         readLength = (int) (sliceSize-offset);
                     }
                     mapBuffer.get(readBuff, 0, readLength);
+                    HashMap<Object, Object> HashMap = new HashMap<>();
+                    byte[] lineBytes;
                     for(int i=0;i<readLength;i++){
+                        int j = 0;
                         byte tmp = readBuff[i];
                         if(tmp=='\n' || tmp=='\r'){
+                            //先分行，处理字符串
+                            lineBytes = Arrays.copyOfRange(readBuff,j,j+i);
+                            int k = 0;
+                            for (int m=0;m<lineBytes.length;m++){
+                                byte blank = lineBytes[m];
+                                if(blank == '\t' && k != 3){
+                                    byte[] ss = Arrays.copyOfRange(lineBytes,0,m);
+                                    String s2=new String(ss);
+                                    System.out.println(s2);
+                                    k++;
+                                }else if (blank == '\t' && k == 3){
+                                    byte[] ss = Arrays.copyOfRange(lineBytes,0,m);
+                                    String s2=new String(ss);
+                                    System.out.println(s2);
+                                }
+                            }
+
+                            String s1=new String(lineBytes);
+//                            System.out.println(s1);
+
+//                            concurrentHashMap.put(readBuff[j]);
+                            
 //                            handle(bos.toByteArray());
 //                            bos.reset();
+                            j = i;
                         }else{
 //                            bos.write(tmp);
                         }
