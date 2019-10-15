@@ -1,17 +1,13 @@
 package com.example.study.test.read;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class BigFileReader {
+public class BigFileReader2 {
     private int threadSize;
     private String charset;
     private int bufferSize;
@@ -23,7 +19,7 @@ public class BigFileReader {
     private CyclicBarrier cyclicBarrier;
     private AtomicLong counter = new AtomicLong(0);
 
-    private BigFileReader(File file,IHandle handle,String charset,int bufferSize,int threadSize){
+    private BigFileReader2(File file, IHandle handle, String charset, int bufferSize, int threadSize){
         this.fileLength = file.length();
         this.handle = handle;
         this.charset = charset;
@@ -35,7 +31,7 @@ public class BigFileReader {
             e.printStackTrace();
         }
         this.executorService = Executors.newFixedThreadPool(threadSize);
-        startEndPairs = new HashSet<BigFileReader.StartEndPair>();
+        startEndPairs = new HashSet<BigFileReader2.StartEndPair>();
     }
 
     public void start() throws ExecutionException, InterruptedException {
@@ -179,8 +175,8 @@ public class BigFileReader {
 
         private HashMap threadMap = new HashMap<String, Map>();
         /**
-         * @param  	pair position (include)
-         * @param map 	the position read to(include)
+         * @param  	read position (include)
+         * @param end 	the position read to(include)
          */
         public SliceReaderTask(StartEndPair pair,HashMap map) {
             this.start = pair.start;
@@ -195,61 +191,83 @@ public class BigFileReader {
         public Map<String,Map> call() {
             HashMap<String, Integer> urlMap = new HashMap<>();
             try {
-//                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                MappedByteBuffer mapBuffer = rAccessFile.getChannel().map(MapMode.READ_ONLY,start, this.sliceSize);
-                int j = 0;
-                ArrayList<Byte> byteList = new ArrayList<Byte>();
-                HashMap<Integer, List> byteMap = new HashMap<>();
-
-                StringBuilder stringBuilder = new StringBuilder();
-                int m = 0;
-                Boolean b = false;
-                Boolean b2 = false;
-                Boolean falg = false;
-                for(; ;){
-                    //循环每一个字节
-                    byte tmp = mapBuffer.get();
-
-                   if(tmp=='\n' || tmp=='\r'){
-                        m = 0;
-                        b = false;
-                        b2 = false;
-                        falg = false;
-                        continue;
-                    }else if(falg){
-                        continue;
-                    } else{
-//                        for(;;){
-                        if(tmp == '\t' || b){
-                            if(m < 3){
-                                m++;
-                                if(m==3){
-                                    b = true;
-                                }
-                            } else{
-                                if(tmp == '/'){
-                                    byteList.add(tmp);
-                                    b2 = true;
-                                }else if(b2){
-                                    if(tmp == 32){
-                                        byte[] bytes = new byte[byteList.size()];
-                                        for(int i=0;i<byteList.size();i++){
-                                            bytes[i] = byteList.get(i);
+                //放在外面大文件可能造成oom
+//                MappedByteBuffer mapBuffer = rAccessFile.getChannel().map(MapMode.READ_ONLY,start, this.sliceSize);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//                for(int offset=0;offset<sliceSize;offset+=bufferSize){
+                    MappedByteBuffer mapBuffer = rAccessFile.getChannel().map(MapMode.READ_ONLY,start, this.sliceSize);
+                    int readLength;
+                    if(bufferSize<=sliceSize){
+                        readLength = (int)sliceSize;
+                    }else{
+                        readLength = bufferSize;
+                    }
+                    mapBuffer.get(readBuff, 0, readLength);
+                    byte[] lineBytes;
+                    int j = 0;
+                    //循环分片内容
+                    for(int i=0;i<readLength;i++){
+                        byte tmp = readBuff[i];
+                        
+                        //分成每一行数据
+                        if(tmp=='\n' || tmp=='\r'){
+                            //先分行，处理字符串 lineBytes 一行字符流
+                            lineBytes = Arrays.copyOfRange(readBuff,j,j+i);
+                            int k = 0;
+                            int x = 0;
+                            //循环每一行数据，截取掉前面的无用数据
+                            Boolean flag = true;
+                            for (int m=0;m<lineBytes.length && flag ;m++){
+                                byte blank = lineBytes[m];
+                                if(blank == '\t' && k != 3){
+                                    k++;
+                                    x = m;
+                                }else if (blank == '\t' && k == 3){
+                                    byte[] tailByte = Arrays.copyOfRange(lineBytes,x,lineBytes.length);
+                                    for(int y=0; y< tailByte.length && flag; y++) {
+                                        if(tailByte[y] == '/'){
+                                            //去除前缀后的urlByte
+                                            byte[] urlByte = Arrays.copyOfRange(tailByte, y, tailByte.length);
+                                            if(urlByte.length > 8){
+                                                for(int a = 0; a<urlByte.length && flag; a++){
+                                                    //这一行已经统计结束，可以跳出行循环；
+                                                    if(urlByte[a] == 32){
+                                                        byte[] realByte = Arrays.copyOfRange(urlByte, 0, a);
+                                                        String url = new String(realByte);
+                                                        if(urlMap.containsKey(url)){
+                                                            urlMap.put(url,urlMap.get(url)+1);
+                                                        }else {
+                                                            urlMap.put(url,1);
+                                                        }
+                                                        flag = false;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            flag = false;
+                                            break;
                                         }
-                                        String  ss = new String(bytes);
-                                        System.out.println("========="+ss);
-                                        falg = true;
-                                        continue;
                                     }
-                                    byteList.add(tmp);
+//                                    break;
                                 }
                             }
                         }
+                        j = i;
                     }
+//                    break;
+//                }
+                System.out.println("============");
 
+                for (Map.Entry<String, Integer> m : urlMap.entrySet()) {
+                    System.out.println("key:" + m.getKey() + " value:" + m.getValue());
                 }
-
-//                cyclicBarrier.await();//测试性能用
+                threadMap.put(Thread.currentThread().getName(),urlMap);
+                System.out.println(threadMap);
+                if(bos.size()>0){
+                    System.out.println("=====");
+//                    handle(bos.toByteArray());
+                }
+                cyclicBarrier.await();//测试性能用
             }catch (Exception e) {
                 e.printStackTrace();
             }
@@ -286,8 +304,8 @@ public class BigFileReader {
             return this;
         }
 
-        public BigFileReader build(){
-            return new BigFileReader(this.file,this.handle,this.charset,this.bufferSize,this.threadSize);
+        public BigFileReader2 build(){
+            return new BigFileReader2(this.file,this.handle,this.charset,this.bufferSize,this.threadSize);
         }
     }
 
