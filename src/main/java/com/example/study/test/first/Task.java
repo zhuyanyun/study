@@ -1,4 +1,4 @@
-package com.example.study.test;
+package com.example.study.test.first;
 
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;

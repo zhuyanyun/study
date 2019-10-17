@@ -1,10 +1,10 @@
-package com.example.study.test;
+package com.example.study.test.first;
+
+import com.example.study.test.ReaderUtil;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ComputeRunnable implements Callable {
 

@@ -46,7 +46,6 @@ public class BigFileReader {
     public void start() throws ExecutionException, InterruptedException {
         List<Map<String,Integer>> mapList = new ArrayList<>();
 
-        System.out.println("文件长度：" + fileLength);
         long everySize = this.fileLength/this.threadSize;
         try {
             //处理断行
@@ -76,18 +75,24 @@ public class BigFileReader {
                         }
                     }
                 }
-                ReaderUtil.sortByComparator(oneMap);
+                try {
+                    ReaderUtil.sortByComparator(oneMap);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 System.out.println("use time: "+(System.currentTimeMillis()-startTime));
-                System.out.println("all line: "+counter.get());
+//                System.out.println("all line: "+counter.get());
             }
         });
 
 
         for(StartEndPair pair:startEndPairs){
-            System.out.println("分配分片："+pair);
+//            System.out.println("分配分片："+pair);
             this.executorService.execute(new SliceReaderTask(pair, mapList));
         }
+
+        executorService.shutdown();
     }
 
 
@@ -231,7 +236,6 @@ public class BigFileReader {
                     }else if(falg){
                         continue;
                     } else{
-//                        for(;;){
                         if(tmp == '\t' || b){
                             if(m < 3){
                                 m++;
@@ -265,7 +269,6 @@ public class BigFileReader {
                     }
                 }
             }catch (Exception e) {
-//                e.printStackTrace();
             }finally {
                 try {
                     mapList.add(strMap);
@@ -274,13 +277,6 @@ public class BigFileReader {
                     e.printStackTrace();
                 }
             }
-//
-//            for(Map.Entry<String, Integer> entry : strMap.entrySet()){
-//                String mapKey = entry.getKey();
-//                Integer mapValue = entry.getValue();
-//                System.out.println(mapKey+" : "+mapValue);
-//            }
-//            return strMap;
         }
 
     }

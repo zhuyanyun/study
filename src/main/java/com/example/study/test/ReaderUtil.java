@@ -1,8 +1,8 @@
 package com.example.study.test;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import com.fasterxml.jackson.databind.util.JSONPObject;
+
+import java.io.*;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,37 +11,32 @@ public class ReaderUtil {
 
 //    public static HashMap<String, Integer> map = new HashMap<>();
 
+    private static final String FILE_PATH = "/Users/mac/Desktop/技术大赛/结果/result.txt";
 
     //降序排序
-    public static  <K, V extends Comparable<? super V>> Map<K, V> sortByComparator(Map<K, V> map) {
+    public static <K, V extends Comparable<? super V>> Map<K, V> sortByComparator(Map<K, V> map) throws IOException {
         Map<K, V> result = new LinkedHashMap<>();
 
         map.entrySet().stream()
                 .sorted(Map.Entry.<K, V>comparingByValue()
                         .reversed()).forEachOrdered(e -> result.put(e.getKey(), e.getValue()));
 
-//        for(Map.Entry<K, V> entry : result.entrySet()) {
-//            System.out.println(entry.getKey() + ",value=" + entry.getValue());
-//        }
+        int i = 0;
+        StringBuffer str = new StringBuffer();
+        for(Map.Entry<K, V> entry : result.entrySet()) {
+            i++;
+            str.append(entry.getKey()+" : "+ entry.getValue());
+            if(i>9){
+                break;
+            }
+        }
 
-//        try {
-//            File file = new File("/");
-//            if (!file.getParentFile().exists()) {
-//                file.getParentFile().mkdirs();
-//            }
-//            file.createNewFile();
-//            if(result != null && !"".equals(result)){
-//                FileWriter fw = new FileWriter(file, true);
-//            fw.write(result.toString());//写入本地文件中
-//            fw.flush();
-//            fw.close();
-//            System.out.println("执行完毕!");
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-
+        FileWriter fw = new FileWriter(FILE_PATH,true); //file是将要储存文件得地址，true/false是再次保存时是否覆盖上一次文件
+        /**写数据*/
+        fw.write(str.toString());
+        /**释放资源,关闭此文件输出流,
+         * 并释放与此流有关的所有系统资源*/
+        fw.close();
 
         return result;
     }

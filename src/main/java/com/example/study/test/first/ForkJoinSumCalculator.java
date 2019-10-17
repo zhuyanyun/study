@@ -1,4 +1,4 @@
-//package com.example.study.test;
+package com.example.study.test.first;//package com.example.study.test;
 //
 //import java.util.HashMap;
 //import java.util.Map;

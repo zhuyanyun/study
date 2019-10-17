@@ -1,7 +1,4 @@
-package com.example.study.test;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package com.example.study.test.first;
 
 import java.io.FileInputStream;
 import java.io.IOException;

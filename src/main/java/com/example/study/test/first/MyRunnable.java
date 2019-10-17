@@ -1,6 +1,4 @@
-package com.example.study.test;
-
-import com.fasterxml.jackson.databind.util.JSONPObject;
+package com.example.study.test.first;
 
 import java.util.ArrayList;
 import java.util.HashMap;

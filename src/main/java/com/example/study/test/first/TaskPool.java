@@ -1,10 +1,9 @@
-package com.example.study.test;
+package com.example.study.test.first;
 
 import sun.jvm.hotspot.utilities.soql.Callable;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class TaskPool {
 
