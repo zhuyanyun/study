@@ -7,10 +7,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class FileBufferReader {
 
@@ -22,8 +19,8 @@ public class FileBufferReader {
 
     private Deque deque = new ConcurrentLinkedDeque();
     private Queue queue = new ArrayBlockingQueue(10);
-    private ExecutorService executorService;
-
+//    private ExecutorService executorService;
+    private ThreadPoolExecutor executorService;
 
 
     public FileBufferReader(String fileName, int arraySize,int threadSize) throws IOException {
@@ -31,7 +28,9 @@ public class FileBufferReader {
         this.fileLength = fileIn.getChannel().size();
         this.arraySize = arraySize;
         this.byteBuf = ByteBuffer.allocate(arraySize);
-        executorService = Executors.newFixedThreadPool(threadSize);
+//        executorService = Executors.newFixedThreadPool(threadSize);
+        executorService =
+                new ThreadPoolExecutor(threadSize,threadSize,1000,TimeUnit.SECONDS,new LinkedBlockingQueue(20));
     }
 
     public void read() throws IOException {
