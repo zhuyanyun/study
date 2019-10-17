@@ -1,5 +1,8 @@
 package com.example.study.test;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -17,9 +20,29 @@ public class ReaderUtil {
                 .sorted(Map.Entry.<K, V>comparingByValue()
                         .reversed()).forEachOrdered(e -> result.put(e.getKey(), e.getValue()));
 
-        for(Map.Entry<K, V> entry : result.entrySet()) {
-            System.out.println("Key = " + entry.getKey() + ",value=" + entry.getValue());
-        }
+//        for(Map.Entry<K, V> entry : result.entrySet()) {
+//            System.out.println(entry.getKey() + ",value=" + entry.getValue());
+//        }
+
+//        try {
+//            File file = new File("/");
+//            if (!file.getParentFile().exists()) {
+//                file.getParentFile().mkdirs();
+//            }
+//            file.createNewFile();
+//            if(result != null && !"".equals(result)){
+//                FileWriter fw = new FileWriter(file, true);
+//            fw.write(result.toString());//写入本地文件中
+//            fw.flush();
+//            fw.close();
+//            System.out.println("执行完毕!");
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+
+
         return result;
     }
 

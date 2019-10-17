@@ -1,5 +1,10 @@
 package com.example.study.test.read;
 
+import com.example.study.test.ReaderUtil;
+import jdk.management.resource.internal.inst.InitInstrumentation;
+import org.springframework.util.CollectionUtils;
+import sun.jvm.hotspot.tools.ObjectHistogram;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -39,6 +44,8 @@ public class BigFileReader {
     }
 
     public void start() throws ExecutionException, InterruptedException {
+        List<Map<String,Integer>> mapList = new ArrayList<>();
+
         System.out.println("文件长度：" + fileLength);
         long everySize = this.fileLength/this.threadSize;
         try {
@@ -54,32 +61,35 @@ public class BigFileReader {
 
             @Override
             public void run() {
+                Map<String, Integer> oneMap = new HashMap<>();
+                for(int i = 0;i < mapList.size() ; i++){
+                    if(CollectionUtils.isEmpty(oneMap)){
+                        oneMap = mapList.get(0);
+                    }else{
+                        Map<String, Integer> map = mapList.get(i);
+                        for(Map.Entry<String, Integer> eachMap : map.entrySet()){
+                            if(oneMap.containsKey(eachMap.getKey())){
+                                oneMap.put(eachMap.getKey(),eachMap.getValue()+1);
+                            }else {
+                                oneMap.put(eachMap.getKey(),1);
+                            }
+                        }
+                    }
+                }
+                ReaderUtil.sortByComparator(oneMap);
+
                 System.out.println("use time: "+(System.currentTimeMillis()-startTime));
                 System.out.println("all line: "+counter.get());
             }
         });
 
-        HashMap threadMap = new HashMap<String, Map>();
 
-        List<Future<Map<String, Map>>> threadMapList = new ArrayList<Future<Map<String, Map>>>();
         for(StartEndPair pair:startEndPairs){
             System.out.println("分配分片："+pair);
-            Future<Map<String, Map>> submit = this.executorService.submit(new SliceReaderTask(pair, threadMap));
-//            Map<String, Map> stringMapMap = submit.get();
-//            System.out.println(submit);
-//            threadMapList.add(submit);
+            this.executorService.execute(new SliceReaderTask(pair, mapList));
         }
-
-        // 获取10个任务的返回结果
-//        for ( int i=0; i<7; i++ ) {
-//            // 获取包含返回结果的future对象
-//            Future<Map<String, Map>> mapFuture = threadMapList.get(i);
-//            // 从future中取出执行结果（若尚未返回结果，则get方法被阻塞，直到结果被返回为止）
-//            System.out.println(mapFuture);
-//            Map<String, Map> stringMapMap = mapFuture.get();
-//            System.out.println(stringMapMap);
-//        }
     }
+
 
     //移动指针到行尾
     private void calculateStartEnd(long start,long size) throws IOException{
@@ -172,34 +182,36 @@ public class BigFileReader {
         }
 
     }
-    private class SliceReaderTask implements Callable<Map<String,Map>> {
+
+    private class SliceReaderTask implements Runnable {
         private long start;
         private long sliceSize;
         private byte[] readBuff;
 
-        private HashMap threadMap = new HashMap<String, Map>();
+        private List<Map<String,Integer>> mapList = new ArrayList<>();
         /**
          * @param  	pair position (include)
-         * @param map 	the position read to(include)
+         * @param list 	the position read to(include)
          */
-        public SliceReaderTask(StartEndPair pair,HashMap map) {
+        public SliceReaderTask(StartEndPair pair,List list) {
             this.start = pair.start;
             this.sliceSize = pair.end-pair.start+1;
 //            this.readBuff = new byte[bufferSize];
             this.readBuff = new byte[bufferSize];
-            threadMap = map;
+            mapList = list;
 
         }
 
         @Override
-        public Map<String,Map> call() {
+        public void run() {
             HashMap<String, Integer> urlMap = new HashMap<>();
+            Map<String, Integer> strMap = new HashMap<>();
+
             try {
-//                ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 MappedByteBuffer mapBuffer = rAccessFile.getChannel().map(MapMode.READ_ONLY,start, this.sliceSize);
                 int j = 0;
                 ArrayList<Byte> byteList = new ArrayList<Byte>();
-                HashMap<Integer, List> byteMap = new HashMap<>();
+                HashMap<ArrayList<Byte>, Integer> byteMap = new HashMap<>();
 
                 StringBuilder stringBuilder = new StringBuilder();
                 int m = 0;
@@ -227,17 +239,22 @@ public class BigFileReader {
                                     b = true;
                                 }
                             } else{
-                                if(tmp == '/'){
+                                if(tmp == '/' && !b2){
                                     byteList.add(tmp);
                                     b2 = true;
                                 }else if(b2){
-                                    if(tmp == 32){
+                                    if(tmp == 32 || tmp == '?'){
                                         byte[] bytes = new byte[byteList.size()];
                                         for(int i=0;i<byteList.size();i++){
                                             bytes[i] = byteList.get(i);
                                         }
                                         String  ss = new String(bytes);
-                                        System.out.println("========="+ss);
+                                        if(strMap.containsKey(ss)){
+                                            strMap.put(ss,strMap.get(ss)+1);
+                                        }else {
+                                            strMap.put(ss,1);
+                                        }
+                                        byteList.clear();
                                         falg = true;
                                         continue;
                                     }
@@ -246,14 +263,24 @@ public class BigFileReader {
                             }
                         }
                     }
-
                 }
-
-//                cyclicBarrier.await();//测试性能用
             }catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
+            }finally {
+                try {
+                    mapList.add(strMap);
+                    cyclicBarrier.await();//测试性能用
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-            return threadMap;
+//
+//            for(Map.Entry<String, Integer> entry : strMap.entrySet()){
+//                String mapKey = entry.getKey();
+//                Integer mapValue = entry.getValue();
+//                System.out.println(mapKey+" : "+mapValue);
+//            }
+//            return strMap;
         }
 
     }
