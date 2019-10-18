@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) throws ExecutionException, InterruptedException {
 //        Long startTime = System.currentTimeMillis();
 
-        BigFileReader.Builder builder = new BigFileReader.Builder("/Users/mac/Desktop/技术大赛/20g.log",new IHandle() {
+        BigFileReader.Builder builder = new BigFileReader.Builder("/Users/mac/Desktop/技术大赛/access_20190926.log",new IHandle() {
 
             @Override
             public void handle(String line) {

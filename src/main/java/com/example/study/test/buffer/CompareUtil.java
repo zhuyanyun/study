@@ -1,23 +1,53 @@
 package com.example.study.test.buffer;
 
-import java.io.FileWriter;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CompareUtil {
 
-    public static void sourMap(Map<Bytes, AtomicInteger> map){
-        List<Map.Entry<Bytes, AtomicInteger>> list = new ArrayList<Map.Entry<Bytes, AtomicInteger>>();
-        list.addAll(map.entrySet());
-        Collections.sort(list, new ValueComparator());
+    private static final String FILE_PATH = "/Users/mac/Desktop/技术大赛/结果/朱延云.csv";
+    private static File file = new File(FILE_PATH);
+    private static final String LINE = "\n";
+    private static final String DOMAIN = "域名";
+    private static final String URL = "URL";
 
 
 
-        for(int i=0;i< 10;i++){
+    public static void sourMap(Map<Bytes, AtomicInteger> map,Map<Bytes, AtomicInteger> apiMap) throws IOException {
+        List<Map.Entry<Bytes, AtomicInteger>> list = sort(map);
+        List<Map.Entry<Bytes, AtomicInteger>> entryList = sort(apiMap);
+        FileOutputStream fos = new FileOutputStream(file, true);
+        OutputStreamWriter osw = new OutputStreamWriter(fos, "GBK");
+
+        outPutFile(osw,list,DOMAIN);
+        outPutFile(osw,entryList,URL);
+
+        osw.close();
+
+    }
+
+
+    public static void outPutFile(OutputStreamWriter osw,List<Map.Entry<Bytes, AtomicInteger>> list,String str) throws IOException {
+
+        for (int i=0;i< 10;i++) {
+
+            if (i == 0) {
+                osw.write(str +",访问量,");
+                osw.write(LINE);  //换行
+            }
+
             Map.Entry<Bytes, AtomicInteger> entryMap = list.get(i);
-            System.out.println(new String(entryMap.getKey().getKey()) + " : " + entryMap.getValue());
+            osw.write(new String(entryMap.getKey().getKey()) + "," + entryMap.getValue() + ","); //写入内容
+            osw.write(LINE);  //换行
 
         }
+    }
+
+//        for(int i=0;i< 10;i++){
+//            Map.Entry<Bytes, AtomicInteger> entryMap = list.get(i);
+//            System.out.println(new String(entryMap.getKey().getKey()) + " : " + entryMap.getValue());
+//        }
 
 //        int i = 0;
 //        StringBuffer str = new StringBuffer();
@@ -36,7 +66,15 @@ public class CompareUtil {
 //         * 并释放与此流有关的所有系统资源*/
 //        fw.close();
 
+//    }
+
+    public static List<Map.Entry<Bytes, AtomicInteger>>  sort(Map<Bytes, AtomicInteger> map){
+        List<Map.Entry<Bytes, AtomicInteger>> list = new ArrayList<Map.Entry<Bytes, AtomicInteger>>();
+        list.addAll(map.entrySet());
+        Collections.sort(list, new ValueComparator());
+        return list;
     }
+
 
 
     private static class ValueComparator implements Comparator<Map.Entry<Bytes, AtomicInteger>> {

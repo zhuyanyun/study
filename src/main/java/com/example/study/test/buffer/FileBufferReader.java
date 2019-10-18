@@ -22,9 +22,9 @@ public class FileBufferReader {
     private byte[] array;
 
     private Deque deque = new ConcurrentLinkedDeque();
-    private Queue queue = new ArrayBlockingQueue(10);
-//    private ExecutorService executorService;
-    private ThreadPoolExecutor executorService;
+//    private Queue queue = new ArrayBlockingQueue(10);
+    private static ThreadPoolExecutor executorService;
+    private static AnalysisDataTask analysisDataTask = new AnalysisDataTask();
 
 
     public FileBufferReader(String fileName, int arraySize,int threadSize) throws IOException {
@@ -32,7 +32,6 @@ public class FileBufferReader {
         this.fileLength = fileIn.getChannel().size();
         this.arraySize = arraySize;
         this.byteBuf = ByteBuffer.allocate(arraySize);
-//        executorService = Executors.newFixedThreadPool(threadSize);
         executorService =
                 new ThreadPoolExecutor(threadSize,threadSize,10000,TimeUnit.SECONDS,new LinkedBlockingQueue(200));
     }
@@ -49,16 +48,15 @@ public class FileBufferReader {
             deque.offer(array);
             byteBuf.clear();
 
-
             if(!deque.isEmpty()){   //队列满了不会报错
-//                System.out.println("=====" + deque.size());
-                executorService.execute(new AnalysisDataTask((byte[]) deque.pop()));
+                if(i == 0) {
+                    executorService.execute(analysisDataTask.new AnalysisDataRunnable((byte[]) deque.pop()));
+                }
             }
 
             return bytes;
         }else {
             executorService.shutdown();
-            System.out.println("======");
         }
         return -1;
     }
@@ -80,24 +78,30 @@ public class FileBufferReader {
 
         Long startTime = System.currentTimeMillis();
 
-        FileBufferReader reader = new FileBufferReader("/Users/mac/Desktop/技术大赛/20g.log", 1024 * 1024*100,16);
+        //读取快，处理慢，需要平衡处理，随意读取的要小，线程要少
+        FileBufferReader reader = new FileBufferReader("/Users/mac/Desktop/技术大赛/access_20190926.log", 1024 * 800*1,4);
         while (reader.read() != -1){
-//            Thread.sleep(10);
-
         }
 
-        AnalysisDataTask analysisDataTask = new AnalysisDataTask();
+
+        for(;;){
+            if(executorService.isTerminated()){
+                break;
+            }
+        }
+        Long endTime = System.currentTimeMillis() - startTime;
+        System.out.printf("stream Diff: %d ms\n", endTime);
+
+
+
+
         Map<Bytes, AtomicInteger> stMap = analysisDataTask.getStMap();
+        Map<Bytes, AtomicInteger> apiMap = analysisDataTask.getApiMap();
 
-        CompareUtil.sourMap(stMap);
-
-
-//        for(Map.Entry<Bytes, AtomicInteger> entry:stMap.entrySet()){
-//            System.out.println(entry.getKey() + " : " + entry.getValue());
-//        }
+        CompareUtil.sourMap(stMap,apiMap);
 
 
-//        reader.close();
+        reader.close();
         Long estimatedTime = System.currentTimeMillis() - startTime;
         System.out.printf("stream Diff: %d ms\n", estimatedTime);
     }
