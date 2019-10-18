@@ -8,11 +8,32 @@ public class AnalysisDataTask implements Runnable{
 
     private byte[] buff;
 
-    private Map<Bytes,AtomicInteger> stMap = new ConcurrentHashMap<Bytes,AtomicInteger>();
-    private Map<Bytes,AtomicInteger> apiMap = new ConcurrentHashMap<Bytes,AtomicInteger>();
+    private static Map<Bytes,AtomicInteger> stMap = new ConcurrentHashMap<Bytes,AtomicInteger>();
+    private static Map<Bytes,AtomicInteger> apiMap = new ConcurrentHashMap<Bytes,AtomicInteger>();
+
+
+
+    public  Map<Bytes, AtomicInteger> getStMap() {
+        return stMap;
+    }
+
+    public static void setStMap(Map<Bytes, AtomicInteger> stMap) {
+        AnalysisDataTask.stMap = stMap;
+    }
+
+    public static Map<Bytes, AtomicInteger> getApiMap() {
+        return apiMap;
+    }
+
+    public static void setApiMap(Map<Bytes, AtomicInteger> apiMap) {
+        AnalysisDataTask.apiMap = apiMap;
+    }
 
     public AnalysisDataTask(byte[] deque){
         buff = deque;
+    }
+
+    public AnalysisDataTask(){
     }
 
     @Override
@@ -51,15 +72,15 @@ public class AnalysisDataTask implements Runnable{
                 int spCn = 0;
 
                 // 读取内容
-                for (;;) {
+                for (;;) {                //截取	\t之间的有用
                     byte b = buff[index++];
                     if (b == '\t') {
                         break;
                     }
 
-                    if (b == 32) {
+                    if (b == 32) {      //空格
                         spCn++;
-                        if (spCn == 1) {
+                        if (spCn == 1) {      //域名
                             int len = index - 1 - domainStart;
                             byte[] domainBuff = new byte[len];
                             System.arraycopy(buff, domainStart, domainBuff, 0, len);
@@ -79,7 +100,7 @@ public class AnalysisDataTask implements Runnable{
                         }
                     }
 
-                    if (spCn == 5 && b == 63) {
+                    if (spCn == 5 && b == 63) {     //'?'
                         int len = index - 1 - apiStart;
                         byte[] apiBuff = new byte[len];
                         System.arraycopy(buff, apiStart, apiBuff, 0, len);
