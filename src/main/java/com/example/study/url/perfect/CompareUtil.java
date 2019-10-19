@@ -1,6 +1,9 @@
-package com.example.study.test.buffer;
+package com.example.study.url.perfect;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -15,7 +18,7 @@ public class CompareUtil {
 
 
 
-    public static void sourMap(Map<Bytes, AtomicInteger> map,Map<Bytes, AtomicInteger> apiMap) throws IOException {
+    public static void sourMap(Map<Bytes, AtomicInteger> map, Map<Bytes, AtomicInteger> apiMap) throws IOException {
         List<Map.Entry<Bytes, AtomicInteger>> list = sort(map);
         List<Map.Entry<Bytes, AtomicInteger>> entryList = sort(apiMap);
         FileOutputStream fos = new FileOutputStream(file, true);
@@ -29,7 +32,7 @@ public class CompareUtil {
     }
 
 
-    public static void outPutFile(OutputStreamWriter osw,List<Map.Entry<Bytes, AtomicInteger>> list,String str) throws IOException {
+    public static void outPutFile(OutputStreamWriter osw, List<Map.Entry<Bytes, AtomicInteger>> list, String str) throws IOException {
 
         for (int i=0;i< 10;i++) {
 
